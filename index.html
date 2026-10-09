@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0F3D4C">
+<title>ServiGo – Prestadores de serviços perto de você</title>
+<style>
+:root{--ink:#0F3D4C;--sun:#FFC83D;--bg:#F6F7F5;--card:#fff;--mute:#5B6B73;--line:#E2E6E4;--ok:#1F9D6B;--r:14px}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;padding-bottom:90px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+header{background:var(--ink);color:#fff;padding:18px 16px 16px;position:sticky;top:0;z-index:5}
+.brand{display:flex;justify-content:space-between;align-items:center}
+.brand h1{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.brand h1 span{color:var(--sun)}
+.login{background:transparent;color:#fff;border:1.5px solid #ffffff66;border-radius:99px;padding:6px 14px;font-size:14px}
+.loc{margin-top:10px;font-size:14px;color:#cfe3e8;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.loc button{background:var(--sun);color:var(--ink);font-weight:700;border-radius:99px;padding:5px 12px;font-size:13px}
+.search{margin-top:12px;width:100%;padding:12px 14px;border-radius:var(--r);border:0;font-size:16px;background:#fff;color:var(--ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:8px 14px;font-weight:600;font-size:14px}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 4px;font-size:14px;color:var(--mute)}
+.bar select{border:1.5px solid var(--line);border-radius:10px;padding:5px 8px;background:#fff}
+#list{padding:8px 16px;display:grid;gap:12px}
+.card{background:var(--card);border-radius:var(--r);padding:14px;display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);text-align:left;width:100%}
+.av{width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--sun);display:grid;place-items:center;font-weight:800;font-size:20px}
+.card h3{font-size:17px;line-height:1.2}
+.card p{font-size:14px;color:var(--mute)}
+.meta{font-size:13px;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.star{color:#C98A00;font-weight:700}
+.ver{color:var(--ok);font-weight:700}
+.dist{background:var(--sun);color:var(--ink);font-weight:900;border-radius:12px;padding:8px 10px;font-size:15px;text-align:center;min-width:64px}
+.dist small{display:block;font-size:10px;font-weight:700}
+.empty{text-align:center;padding:40px 16px;color:var(--mute)}
+.fab{position:fixed;left:16px;right:16px;bottom:16px;background:var(--ink);color:#fff;font-weight:800;border-radius:var(--r);padding:15px;font-size:16px;box-shadow:0 6px 20px #0F3D4C55;max-width:560px;margin:auto;z-index:4}
+.sheet{position:fixed;inset:0;background:#0b222b99;display:none;align-items:flex-end;justify-content:center;z-index:10}
+.sheet.on{display:flex}
+.panel{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px 24px;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}}
+.panel h2{font-size:22px}
+.close{float:right;background:var(--bg);border-radius:50%;width:36px;height:36px;font-size:18px}
+.row{display:flex;gap:14px;align-items:center;margin:8px 0 14px}
+.rev{border-top:1px solid var(--line);padding:10px 0;font-size:14px}
+.rev b{display:block}
+.wa{display:block;text-align:center;background:var(--ok);color:#fff;font-weight:800;border-radius:var(--r);padding:14px;text-decoration:none;margin-top:14px;font-size:16px}
+label{display:block;font-weight:700;font-size:14px;margin-top:12px}
+.in{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:5px;font-size:16px;background:#fff}
+.btn{width:100%;background:var(--ink);color:#fff;font-weight:800;border-radius:var(--r);padding:14px;margin-top:18px;font-size:16px}
+.note{font-size:13px;color:var(--mute);margin-top:10px}
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:20;font-size:14px}
+.lnk{background:none;text-decoration:underline;font-size:14px;margin-top:10px;padding:6px 0;display:block;width:100%}
+.pos{background:var(--bg);border:1.5px dashed var(--ink);border-radius:12px;padding:11px;width:100%;margin-top:14px;font-weight:700}
+.hid{display:none}
+#toast.bad{background:#C0392B}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Servi<span>Go</span></h1>
+    <button class="login" id="btnLogin">Entrar</button>
+  </div>
+  <div class="loc"><span id="locTxt">Ative a localização para ver os mais próximos</span><button id="btnLoc">Usar minha localização</button></div>
+  <input class="search" id="q" type="search" placeholder="Qual serviço você precisa?" aria-label="Buscar serviço">
+</header>
+
+<div class="chips" id="chips" role="group" aria-label="Categorias"></div>
+<div class="bar"><span id="count"></span>
+  <select id="sort" aria-label="Ordenar"><option value="dist">Mais perto</option><option value="new">Mais recentes</option></select>
+</div>
+<main id="list"></main>
+
+<button class="fab" id="btnNew">Quero oferecer meus serviços</button>
+
+<div class="sheet" id="shProfile"><div class="panel" id="pfBody"></div></div>
+
+<div class="sheet" id="shNew"><div class="panel">
+  <button class="close" data-close aria-label="Fechar">✕</button>
+  <h2>Cadastro de prestador</h2>
+  <label>Nome<input class="in" id="nName" autocomplete="name"></label>
+  <label>Profissão<select class="in" id="nCat"></select></label>
+  <label>WhatsApp (com DDD)<input class="in" id="nPhone" type="tel" inputmode="tel" placeholder="48 99999-0000"></label>
+  <label>Conte o que você faz<textarea class="in" id="nDesc" rows="3" placeholder="Ex.: Instalação de chuveiros, tomadas e quadros. Atendo no mesmo dia."></textarea></label>
+  <button class="pos" id="nPos" type="button">📍 Definir minha localização de atendimento</button>
+  <button class="btn" id="nSave">Salvar meu perfil</button>
+  <p class="note">Sua localização é salva de forma aproximada (cerca de 1 km). Seu WhatsApp só aparece para quem estiver logado.</p>
+</div></div>
+
+<div class="sheet" id="shLogin"><div class="panel">
+  <button class="close" data-close aria-label="Fechar">✕</button>
+  <h2 id="lTitle">Entrar</h2>
+  <div id="lNameWrap" class="hid"><label>Seu nome<input class="in" id="lName" autocomplete="name"></label></div>
+  <label>E-mail<input class="in" type="email" id="lMail" autocomplete="email"></label>
+  <label>Senha<input class="in" type="password" id="lPass" autocomplete="current-password"></label>
+  <button class="btn" id="lGo">Entrar</button>
+  <button class="lnk" id="lSwitch">Ainda não tenho conta</button>
+  <button class="lnk" id="lReset">Esqueci minha senha</button>
+</div></div>
+
+<div id="toast" role="status"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail,updateProfile} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,collection,getDocs,query,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyBb-qVKqZiFGqVWjMZ6Ar1a7ZzpMuB0Iqg",
+  authDomain:"servigo-br.firebaseapp.com",
+  projectId:"servigo-br",
+  storageBucket:"servigo-br.firebasestorage.app",
+  messagingSenderId:"635869080622",
+  appId:"1:635869080622:web:2560cd873e129c01c203bf"
+});
+const auth=getAuth(app), db=getFirestore(app);
+
+const CATS=[["Eletricista","⚡"],["Encanador","🔧"],["Pedreiro","🧱"],["Pintor","🎨"],["Babá","🧸"],["Cuidador(a) de idosos","🤝"],["Mecânico","🚗"],["Diarista","🧹"],["Jardineiro","🌳"],["Marceneiro","🪚"],["Serralheiro","🔩"],["Chaveiro","🔑"],["Vidraceiro","🪟"],["Gesseiro","🏠"],["Ar-condicionado","❄️"],["Eletrodomésticos","🔌"],["Informática","💻"],["Montador de móveis","🪑"],["Pet","🐶"],["Costureira","🧵"],["Cozinheira","🍲"],["Fretes e mudanças","🚚"],["Beleza","💇"],["Aulas particulares","📚"],["Dedetização","🐜"],["Piscineiro","🏊"],["Outros","➕"]];
+let user=null,me=null,mePhone="",P=[],here=null,myPos=null,cat="Todos",q="",sort="dist",mode="in";
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const ini=n=>n.split(" ").slice(0,2).map(x=>x[0]).join("").toUpperCase();
+const fmt=k=>k<1?Math.round(k*1000)+" m":k.toFixed(1).replace(".",",")+" km";
+const open=id=>$(id).classList.add("on");
+const closeAll=()=>document.querySelectorAll(".sheet").forEach(s=>s.classList.remove("on"));
+function toast(m,bad){const t=$("#toast");t.textContent=m;t.className=bad?"bad":"";t.style.display="block";setTimeout(()=>t.style.display="none",3200)}
+function hav(a,b,c,d){const r=x=>x*Math.PI/180,h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 12742*Math.asin(Math.sqrt(h))}
+const dist=p=>here?hav(here.lat,here.lng,p.lat,p.lng):null;
+function getPos(ok){
+  if(!navigator.geolocation){toast("Seu navegador não permite localização",1);return}
+  navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lng:p.coords.longitude}),()=>toast("Permissão de localização negada",1),{timeout:12000});
+}
+
+/* ---------- Lista ---------- */
+async function loadProviders(){
+  try{
+    const s=await getDocs(query(collection(db,"prestadores"),limit(300)));
+    P=s.docs.map(d=>{const x=d.data();return{id:d.id,n:x.nome,c:x.categoria,d:x.descricao,lat:x.lat,lng:x.lng,ok:x.verificado,t:x.criadoEm?.seconds||0}});
+  }catch(e){toast("Não foi possível carregar os profissionais",1)}
+  render();
+}
+function chips(){
+  $("#chips").innerHTML=[["Todos",""],...CATS].map(([c,e])=>`<button class="chip" aria-pressed="${c===cat}" data-c="${esc(c)}">${e} ${esc(c)}</button>`).join("");
+}
+function render(){
+  const t=q.toLowerCase();
+  const L=P.filter(p=>(cat==="Todos"||p.c===cat)&&(!t||(p.n+p.c+p.d).toLowerCase().includes(t)));
+  L.sort((a,b)=>sort==="dist"&&here?dist(a)-dist(b):b.t-a.t);
+  $("#count").textContent=L.length+(L.length===1?" profissional":" profissionais");
+  $("#list").innerHTML=L.length?L.map(p=>{const d=dist(p);return`<button class="card" data-id="${esc(p.id)}">
+    <div class="av">${esc(ini(p.n))}</div>
+    <div><h3>${esc(p.n)}</h3><p>${esc(p.c)}</p>
+    <div class="meta"><span>Novo no ServiGo</span>${p.ok?'<span class="ver">✔ Verificado</span>':""}</div></div>
+    <div class="dist">${d!=null?fmt(d):"?"}<small>${d!=null?"de você":"ative o GPS"}</small></div></button>`}).join("")
+    :`<div class="empty"><b>Ainda não há profissionais aqui.</b><br>Seja o primeiro: toque em "Quero oferecer meus serviços".</div>`;
+}
+async function openProfile(id){
+  const p=P.find(x=>x.id===id);if(!p)return;
+  const d=dist(p);
+  $("#pfBody").innerHTML=`<button class="close" data-close aria-label="Fechar">✕</button>
+  <div class="row"><div class="av">${esc(ini(p.n))}</div><div><h2>${esc(p.n)}</h2><p>${esc(p.c)}${d!=null?" · a "+fmt(d):""}</p></div></div>
+  ${p.ok?'<div class="meta"><span class="ver">✔ Verificado</span></div>':""}
+  <p style="margin-top:12px">${esc(p.d)}</p><div id="pfCt"></div>`;
+  open("#shProfile");
+  const ct=$("#pfCt");
+  if(!user){
+    ct.innerHTML=`<button class="btn" id="pfLogin">Entre para ver o contato</button>`;
+    $("#pfLogin").onclick=()=>{closeAll();setMode("in");open("#shLogin")};return;
+  }
+  ct.innerHTML=`<p class="note">Carregando contato…</p>`;
+  try{
+    const s=await getDoc(doc(db,"contatos",id));
+    const t=s.exists()?String(s.data().whatsapp).replace(/\D/g,""):"";
+    const msg=encodeURIComponent(`Olá ${p.n.split(" ")[0]}, vi seu perfil no ServiGo e preciso de um serviço de ${p.c.toLowerCase()}.`);
+    ct.innerHTML=t?`<a class="wa" href="https://wa.me/${t}?text=${msg}" target="_blank" rel="noopener">Chamar no WhatsApp</a>`:`<p class="note">Este profissional ainda não informou contato.</p>`;
+  }catch(e){ct.innerHTML=`<p class="note">Não foi possível carregar o contato.</p>`}
+}
+
+/* ---------- Login ---------- */
+function setMode(m){
+  mode=m;const up=m==="up";
+  $("#lTitle").textContent=up?"Criar conta":"Entrar";
+  $("#lGo").textContent=up?"Criar conta":"Entrar";
+  $("#lSwitch").textContent=up?"Já tenho conta":"Ainda não tenho conta";
+  $("#lNameWrap").classList.toggle("hid",!up);
+  $("#lReset").classList.toggle("hid",up);
+}
+const ERR={"auth/invalid-credential":"E-mail ou senha incorretos","auth/email-already-in-use":"Este e-mail já tem conta. Use Entrar","auth/weak-password":"Senha fraca: use ao menos 6 caracteres","auth/invalid-email":"E-mail inválido","auth/too-many-requests":"Muitas tentativas. Aguarde um pouco","auth/network-request-failed":"Sem conexão com a internet"};
+$("#lGo").onclick=async()=>{
+  const email=$("#lMail").value.trim(),pass=$("#lPass").value,nome=$("#lName").value.trim();
+  if(!email||pass.length<6){toast("Informe e-mail e senha (mínimo 6 caracteres)",1);return}
+  if(mode==="up"&&nome.length<2){toast("Informe seu nome",1);return}
+  try{
+    if(mode==="up"){const c=await createUserWithEmailAndPassword(auth,email,pass);await updateProfile(c.user,{displayName:nome})}
+    else await signInWithEmailAndPassword(auth,email,pass);
+    closeAll();toast(mode==="up"?"Conta criada!":"Bem-vindo(a)!");
+    $("#lPass").value="";
+  }catch(e){toast(ERR[e.code]||"Não foi possível entrar. Tente de novo",1)}
+};
+$("#lSwitch").onclick=()=>setMode(mode==="in"?"up":"in");
+$("#lReset").onclick=async()=>{
+  const email=$("#lMail").value.trim();
+  if(!email){toast("Digite seu e-mail acima",1);return}
+  try{await sendPasswordResetEmail(auth,email)}catch(e){}
+  toast("Se o e-mail tiver conta, você receberá um link para criar nova senha");
+};
+$("#btnLogin").onclick=()=>user?signOut(auth).then(()=>toast("Você saiu")):(setMode("in"),open("#shLogin"));
+
+onAuthStateChanged(auth,async u=>{
+  user=u;me=null;mePhone="";
+  $("#btnLogin").textContent=u?"Sair":"Entrar";
+  if(u){
+    try{
+      const [a,b]=await Promise.all([getDoc(doc(db,"prestadores",u.uid)),getDoc(doc(db,"contatos",u.uid))]);
+      if(a.exists()){me=a.data();mePhone=b.exists()?b.data().whatsapp:""}
+    }catch(e){}
+  }
+  $("#btnNew").textContent=me?"Editar meu perfil":"Quero oferecer meus serviços";
+});
+
+/* ---------- Cadastro do prestador ---------- */
+$("#nCat").innerHTML=CATS.map(([c])=>`<option>${esc(c)}</option>`).join("");
+const posLabel=()=>$("#nPos").textContent=myPos?"📍 Localização definida (aproximada). Toque para atualizar":"📍 Definir minha localização de atendimento";
+$("#btnNew").onclick=()=>{
+  if(!user){setMode("up");open("#shLogin");toast("Crie sua conta para se cadastrar como prestador");return}
+  $("#nName").value=me?.nome||user.displayName||"";
+  $("#nCat").value=me?.categoria||CATS[0][0];
+  $("#nPhone").value=mePhone.replace(/^55/,"");
+  $("#nDesc").value=me?.descricao||"";
+  myPos=me?{lat:me.lat,lng:me.lng}:null;posLabel();
+  open("#shNew");
+};
+$("#nPos").onclick=()=>getPos(p=>{ // arredonda para ~1 km: não expõe o endereço exato
+  myPos={lat:Math.round(p.lat*100)/100,lng:Math.round(p.lng*100)/100};posLabel();
+});
+$("#nSave").onclick=async()=>{
+  const nome=$("#nName").value.trim(),desc=$("#nDesc").value.trim();
+  let t=$("#nPhone").value.replace(/\D/g,"");if(t.length<=11)t="55"+t;
+  if(nome.length<2||desc.length<10||!/^\d{12,13}$/.test(t)||!myPos){toast("Preencha nome, descrição (mín. 10 letras), WhatsApp com DDD e localização",1);return}
+  const base={nome,categoria:$("#nCat").value,descricao:desc,lat:myPos.lat,lng:myPos.lng,atualizadoEm:serverTimestamp()};
+  try{
+    await setDoc(doc(db,"prestadores",user.uid),me?{...base,verificado:me.verificado,criadoEm:me.criadoEm}:{...base,verificado:false,criadoEm:serverTimestamp()});
+    await setDoc(doc(db,"contatos",user.uid),{whatsapp:t});
+    me=(await getDoc(doc(db,"prestadores",user.uid))).data();mePhone=t;
+    $("#btnNew").textContent="Editar meu perfil";
+    closeAll();cat="Todos";chips();await loadProviders();toast("Perfil salvo!");
+  }catch(e){toast("Não foi possível salvar. Verifique as regras do Firestore",1)}
+};
+
+/* ---------- Eventos gerais ---------- */
+$("#chips").onclick=e=>{const b=e.target.closest(".chip");if(b){cat=b.dataset.c;chips();render()}};
+$("#list").onclick=e=>{const b=e.target.closest(".card");if(b)openProfile(b.dataset.id)};
+$("#q").oninput=e=>{q=e.target.value;render()};
+$("#sort").onchange=e=>{sort=e.target.value;render()};
+document.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.classList.contains("sheet"))closeAll()});
+$("#btnLoc").onclick=()=>getPos(p=>{here=p;$("#locTxt").textContent="Mostrando os mais próximos de você";render()});
+chips();render();loadProviders();
+</script>
+</body>
+</html>
