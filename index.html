@@ -121,7 +121,7 @@ const app=initializeApp({
 });
 const auth=getAuth(app), db=getFirestore(app);
 
-const CATS=[["Eletricista","⚡"],["Encanador","🔧"],["Pedreiro","🧱"],["Pintor","🎨"],["Babá","🧸"],["Cuidador(a) de idosos","🤝"],["Mecânico","🚗"],["Diarista","🧹"],["Jardineiro","🌳"],["Marceneiro","🪚"],["Serralheiro","🔩"],["Chaveiro","🔑"],["Vidraceiro","🪟"],["Gesseiro","🏠"],["Ar-condicionado","❄️"],["Eletrodomésticos","🔌"],["Informática","💻"],["Montador de móveis","🪑"],["Pet","🐶"],["Costureira","🧵"],["Cozinheira","🍲"],["Fretes e mudanças","🚚"],["Beleza","💇"],["Aulas particulares","📚"],["Dedetização","🐜"],["Piscineiro","🏊"],["Outros","➕"]];
+const CATS=[["Eletricista","⚡"],["Encanador","🔧"],["Pedreiro","🧱"],["Pintor","🎨"],["Babá","🧸"],["Cuidador(a) de idosos","🤝"],["Mecânico","🚗"],["Diarista","🧹"],["Jardineiro","🌳"],["Marceneiro","🪚"],["Serralheiro","🔩"],["Chaveiro","🔑"],["Vidraceiro","🪟"],["Gesseiro","🏠"],["Ar-condicionado","❄️"],["Eletrodomésticos","🔌"],["Informática","💻"],["Montador de móveis","🪑"],["Pet","🐶"],["Costureira","🧵"],["Cozinheira","🍲"],["Fretes e mudanças","🚚"],["Bele za","💇"],["Aulas particulares","📚"],["Dedetização","🐜"],["Piscineiro","🏊"],["Outros","➕"]];
 let user=null,me=null,mePhone="",P=[],here=null,myPos=null,cat="Todos",q="",sort="dist",mode="in";
 
 const $=s=>document.querySelector(s);
