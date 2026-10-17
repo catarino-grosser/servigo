@@ -314,7 +314,7 @@ $("#sort").onchange=e=>{sort=e.target.value;render()};
 document.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.classList.contains("sheet"))closeAll()});
 $("#btnLoc").onclick=()=>getPos(p=>{here=p;$("#locTxt").textContent="Mostrando os mais próximos de você";render()});
 /* ---------- Plano do prestador (Mercado Pago) ---------- */
-const MP_PUBLIC_KEY="COLE_AQUI_SUA_PUBLIC_KEY"; // chave PÚBLICA do Mercado Pago (pode ficar no código)
+const MP_PUBLIC_KEY="APP_USR-c31fc8c2-5867-4ddb-a39c-1eb5964c4bba"; // chave PÚBLICA do Mercado Pago (pode ficar no código)
 let mp=null,mpReady=false;
 async function api(body){
   const tk=user?await user.getIdToken():"";
