@@ -59,6 +59,7 @@ label{display:block;font-weight:700;font-size:14px;margin-top:12px}
 .hid{display:none}
 #toast.bad{background:#C0392B}
 .foot{text-align:center;font-size:13px;color:var(--mute);padding:18px 16px}.foot a,.note a{color:var(--ink)}
+.sf{height:46px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;margin-top:5px;background:#fff;overflow:hidden}
 </style>
 </head>
 <body>
@@ -111,6 +112,9 @@ label{display:block;font-weight:700;font-size:14px;margin-top:12px}
   <button class="close" data-close aria-label="Fechar">✕</button>
   <h2>Minha conta</h2>
   <p class="note" id="aMail"></p>
+  <p class="note hid" id="aPlan"></p>
+  <button class="btn hid" id="aSub">Ativar meu perfil</button>
+  <button class="lnk hid" id="aCancel">Cancelar assinatura</button>
   <button class="btn" id="aOut">Sair</button>
   <button class="lnk" id="aDel" style="color:#C0392B">Excluir minha conta</button>
   <div id="aConfirm" class="hid">
@@ -120,12 +124,25 @@ label{display:block;font-weight:700;font-size:14px;margin-top:12px}
   </div>
 </div></div>
 
+<div class="sheet" id="shPlan"><div class="panel">
+  <button class="close" data-close aria-label="Fechar">✕</button>
+  <h2>Ative seu perfil</h2>
+  <p>Com o plano ativo, seu perfil aparece para os clientes perto de você. <b id="pPreco"></b> por mês, cancele quando quiser.</p>
+  <label>Número do cartão<div class="sf" id="sfNum"></div></label>
+  <div style="display:flex;gap:10px"><label style="flex:1">Validade<div class="sf" id="sfExp"></div></label><label style="flex:1">CVV<div class="sf" id="sfCvv"></div></label></div>
+  <label>Nome no cartão<input class="in" id="pNome" autocomplete="cc-name"></label>
+  <label>Documento do titular<select class="in" id="pDoc"></select></label>
+  <input class="in" id="pNum" inputmode="numeric" placeholder="Número do documento" aria-label="Número do documento">
+  <button class="btn" id="pGo">Assinar</button>
+  <p class="note">Cobrança mensal no cartão, processada pelo Mercado Pago. Os dados do cartão não passam pelo ServiGo. Você cancela em "Minha conta".</p>
+</div></div>
+
 <div id="toast" role="status"></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail,updateProfile,deleteUser,reauthenticateWithCredential,EmailAuthProvider} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
-import {getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+import {getFirestore,doc,getDoc,setDoc,deleteDoc,collection,getDocs,query,where,limit,updateDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
 
 const app=initializeApp({
   apiKey:"AIzaSyBb-qVKqZiFGqVWjMZ6Ar1a7ZzpMuB0Iqg",
@@ -157,7 +174,7 @@ function getPos(ok){
 /* ---------- Lista ---------- */
 async function loadProviders(){
   try{
-    const s=await getDocs(query(collection(db,"prestadores"),limit(300)));
+    const s=await getDocs(query(collection(db,"prestadores"),where("assinaturaAtiva","==",true),limit(300)));
     P=s.docs.map(d=>{const x=d.data();return{id:d.id,n:x.nome,c:x.categoria,d:x.descricao,lat:x.lat,lng:x.lng,ok:x.verificado,t:x.criadoEm?.seconds||0}});
   }catch(e){toast("Não foi possível carregar os profissionais",1)}
   render();
@@ -208,7 +225,7 @@ function setMode(m){
   $("#lNameWrap").classList.toggle("hid",!up);
   $("#lReset").classList.toggle("hid",up);
 }
-const ERR={"auth/invalid-credential":"E-mail ou senha incorretos","auth/email-already-in-use":"Este e-mail já tem conta. Use Entrar","auth/weak-password":"Senha fraca: use ao menos 6 caracteres","auth/invalid-email":"E-mail inválido","auth/too-many-requests":"Muitas tentativas. Aguarde um pouco","auth/network-request-failed":"Sem conexão com a internet"};
+const ERR={"auth/invalid-credential":"E-mail ou senha incorretos","auth/email-already-in-use":"Este e-mail já tem conta. Use Entrar","auth/weak-password":"Senha fraca: use ao menos 6 caracteres","auth/invalid-email":"E-mail inválido","auth/too-many-requests":"Muitas tentativas. Aguarde um pouco","auth/network-request-failed":"Sem conexão com a internet","permission-denied":"Sem permissão no Firestore. Publique as regras do firestore.rules","auth/requires-recent-login":"Digite a senha de novo e tente outra vez"};
 $("#lGo").onclick=async()=>{
   const email=$("#lMail").value.trim(),pass=$("#lPass").value,nome=$("#lName").value.trim();
   if(!email||pass.length<6){toast("Informe e-mail e senha (mínimo 6 caracteres)",1);return}
@@ -229,7 +246,7 @@ $("#lReset").onclick=async()=>{
 };
 $("#btnLogin").onclick=()=>{
   if(!user){setMode("in");open("#shLogin");return}
-  $("#aMail").textContent=user.email;$("#aPass").value="";$("#aConfirm").classList.add("hid");open("#shAcc");
+  $("#aMail").textContent=user.email;showPlan();$("#aPass").value="";$("#aConfirm").classList.add("hid");open("#shAcc");
 };
 $("#aOut").onclick=()=>signOut(auth).then(()=>{closeAll();toast("Você saiu")});
 $("#aDel").onclick=()=>$("#aConfirm").classList.remove("hid");
@@ -239,11 +256,12 @@ $("#aGo").onclick=async()=>{
   try{
     await reauthenticateWithCredential(user,EmailAuthProvider.credential(user.email,pass));
     const uid=user.uid;
+    if(me)await api({acao:"cancelar",apagar:true}); // cancela a cobrança antes de apagar
     await deleteDoc(doc(db,"prestadores",uid));
     await deleteDoc(doc(db,"contatos",uid));
     await deleteUser(user);
     closeAll();await loadProviders();toast("Conta excluída");
-  }catch(e){toast(ERR[e.code]||"Não foi possível excluir. Tente de novo",1)}
+  }catch(e){toast(ERR[e.code]||("Não foi possível excluir ("+(e.code||e.message)+")"),1)}
 };
 
 onAuthStateChanged(auth,async u=>{
@@ -279,11 +297,12 @@ $("#nSave").onclick=async()=>{
   if(nome.length<2||desc.length<10||!/^\d{12,13}$/.test(t)||!myPos){toast("Preencha nome, descrição (mín. 10 letras), WhatsApp com DDD e localização",1);return}
   const base={nome,categoria:$("#nCat").value,descricao:desc,lat:myPos.lat,lng:myPos.lng,atualizadoEm:serverTimestamp()};
   try{
-    await setDoc(doc(db,"prestadores",user.uid),me?{...base,verificado:me.verificado,criadoEm:me.criadoEm}:{...base,verificado:false,criadoEm:serverTimestamp()});
+    if(me)await updateDoc(doc(db,"prestadores",user.uid),base);else await setDoc(doc(db,"prestadores",user.uid),{...base,verificado:false,criadoEm:serverTimestamp()});
     await setDoc(doc(db,"contatos",user.uid),{whatsapp:t});
     me=(await getDoc(doc(db,"prestadores",user.uid))).data();mePhone=t;
     $("#btnNew").textContent="Editar meu perfil";
-    closeAll();cat="Todos";chips();await loadProviders();toast("Perfil salvo!");
+    closeAll();cat="Todos";chips();await loadProviders();
+    if(me.assinaturaAtiva)toast("Perfil salvo!");else{toast("Perfil salvo! Falta ativar o plano para aparecer aos clientes");openPlan()}
   }catch(e){toast("Não foi possível salvar. Verifique as regras do Firestore",1)}
 };
 
@@ -294,6 +313,62 @@ $("#q").oninput=e=>{q=e.target.value;render()};
 $("#sort").onchange=e=>{sort=e.target.value;render()};
 document.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.classList.contains("sheet"))closeAll()});
 $("#btnLoc").onclick=()=>getPos(p=>{here=p;$("#locTxt").textContent="Mostrando os mais próximos de você";render()});
+/* ---------- Plano do prestador (Mercado Pago) ---------- */
+const MP_PUBLIC_KEY="APP_USR-c4b4fd79-ce53-4ea2-ab98-d15a6d7b197f"; // chave PÚBLICA do Mercado Pago (pode ficar no código)
+let mp=null,mpReady=false;
+async function api(body){
+  const tk=user?await user.getIdToken():"";
+  const r=await fetch("/.netlify/functions/assinatura",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+tk},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.erro||"Erro de conexão");
+  return d;
+}
+const loadSDK=()=>new Promise((ok,no)=>{if(window.MercadoPago)return ok();const s=document.createElement("script");s.src="https://sdk.mercadopago.com/js/v2";s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+async function openPlan(){
+  closeAll();open("#shPlan");
+  try{
+    await loadSDK();
+    if(!mpReady){
+      mp=new MercadoPago(MP_PUBLIC_KEY,{locale:"pt-BR"});
+      mp.fields.create("cardNumber",{placeholder:"Número do cartão"}).mount("sfNum");
+      mp.fields.create("expirationDate",{placeholder:"MM/AA"}).mount("sfExp");
+      mp.fields.create("securityCode",{placeholder:"CVV"}).mount("sfCvv");
+      const t=await mp.getIdentificationTypes();
+      $("#pDoc").innerHTML=t.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+      mpReady=true;
+    }
+    $("#pPreco").textContent=(await api({acao:"info"})).preco;
+  }catch(e){toast("Não foi possível carregar o pagamento",1)}
+}
+function showPlan(){
+  const on=!!(me&&me.assinaturaAtiva);
+  $("#aPlan").classList.toggle("hid",!me);
+  $("#aPlan").textContent=on?"Plano ativo: seu perfil está visível para os clientes.":"Plano inativo: seu perfil não aparece para os clientes.";
+  $("#aSub").classList.toggle("hid",!me||on);
+  $("#aCancel").classList.toggle("hid",!me||!on);
+}
+$("#aSub").onclick=openPlan;
+$("#aCancel").onclick=async()=>{
+  if(!confirm("Cancelar a assinatura? Seu perfil deixará de aparecer para os clientes."))return;
+  try{
+    await api({acao:"cancelar"});
+    me=(await getDoc(doc(db,"prestadores",user.uid))).data();
+    closeAll();await loadProviders();toast("Assinatura cancelada");
+  }catch(e){toast(e.message,1)}
+};
+$("#pGo").onclick=async()=>{
+  const nome=$("#pNome").value.trim(),num=$("#pNum").value.replace(/\D/g,"");
+  if(nome.length<3||num.length<11){toast("Preencha o nome e o documento do titular",1);return}
+  $("#pGo").disabled=true;
+  try{
+    const t=await mp.fields.createCardToken({cardholderName:nome,identificationType:$("#pDoc").value,identificationNumber:num});
+    const r=await api({acao:"criar",token:t.id});
+    me=(await getDoc(doc(db,"prestadores",user.uid))).data();
+    closeAll();await loadProviders();
+    toast(r.ativa?"Assinatura ativa! Seu perfil já aparece para os clientes.":"Pagamento em análise. O perfil aparece quando for aprovado.");
+  }catch(e){toast(e.message||"Não foi possível concluir o pagamento. Confira os dados",1)}
+  $("#pGo").disabled=false;
+};
 chips();render();loadProviders();
 </script>
 </body>
