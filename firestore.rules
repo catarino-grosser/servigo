@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function txt(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function categoriaValida(c) {
+      return c in [
+        'Eletricista', 'Encanador', 'Pedreiro', 'Pintor', 'Babá', 'Cuidador(a) de idosos', 'Mecânico', 'Diarista', 'Jardineiro', 'Marceneiro', 'Serralheiro', 'Chaveiro', 'Vidraceiro', 'Gesseiro', 'Ar-condicionado', 'Eletrodomésticos', 'Informática', 'Montador de móveis', 'Pet', 'Costureira', 'Cozinheira', 'Fretes e mudanças', 'Beleza', 'Aulas particulares', 'Dedetização', 'Piscineiro', 'Outros'
+      ];
+    }
+
+    // Formato obrigatório do perfil público do prestador
+    function perfilValido(d) {
+      return d.keys().hasOnly(['nome','categoria','descricao','lat','lng','verificado','criadoEm','atualizadoEm'])
+        && d.keys().hasAll(['nome','categoria','descricao','lat','lng','verificado','criadoEm','atualizadoEm'])
+        && txt(d.nome, 2, 60)
+        && categoriaValida(d.categoria)
+        && txt(d.descricao, 10, 500)
+        && d.lat is number && d.lat >= -90 && d.lat <= 90
+        && d.lng is number && d.lng >= -180 && d.lng <= 180
+        && d.criadoEm is timestamp
+        && d.atualizadoEm == request.time;
+    }
+
+    // Perfil público: qualquer pessoa lê; só o dono grava.
+    // "verificado" nunca pode ser alterado pelo app (só você, pelo Console).
+    match /prestadores/{uid} {
+      allow read: if true;
+
+      allow create: if isOwner(uid)
+        && perfilValido(request.resource.data)
+        && request.resource.data.verificado == false
+        && request.resource.data.criadoEm == request.time;
+
+      allow update: if isOwner(uid)
+        && perfilValido(request.resource.data)
+        && request.resource.data.verificado == resource.data.verificado
+        && request.resource.data.criadoEm == resource.data.criadoEm;
+
+      allow delete: if isOwner(uid);
+
+      // Avaliações: um cliente logado avalia uma vez cada prestador (id do documento = uid do autor).
+      // Ainda não usadas na tela; já deixadas seguras para a próxima etapa.
+      match /avaliacoes/{autor} {
+        allow read: if true;
+        allow create, update: if isOwner(autor) && autor != uid
+          && request.resource.data.keys().hasOnly(['nota','comentario','autorNome'])
+          && request.resource.data.keys().hasAll(['nota','comentario','autorNome'])
+          && request.resource.data.nota is int
+          && request.resource.data.nota >= 1 && request.resource.data.nota <= 5
+          && txt(request.resource.data.comentario, 0, 300)
+          && txt(request.resource.data.autorNome, 1, 60);
+        allow delete: if isOwner(autor);
+      }
+    }
+
+    // WhatsApp: só quem está logado lê (evita robôs coletando números); só o dono grava.
+    match /contatos/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['whatsapp'])
+        && request.resource.data.whatsapp is string
+        && request.resource.data.whatsapp.matches('^[0-9]{12,13}$');
+      allow delete: if isOwner(uid);
+    }
+
+    // Todo o resto é bloqueado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
