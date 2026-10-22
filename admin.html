@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F3D4C">
+<title>ServiGo Admin</title>
+<style>
+:root{--ink:#0F3D4C;--sun:#FFC83D;--bg:#F6F7F5;--mute:#5B6B73;--line:#E2E6E4;--ok:#1F9D6B;--bad:#C0392B;--r:14px}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;padding-bottom:40px}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+header{background:var(--ink);color:#fff;padding:16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+header h1{font-size:20px;font-weight:900}header h1 span{color:var(--sun)}header small{font-weight:600;font-size:13px;color:#cfe3e8;margin-left:6px}
+.ghost{background:transparent;color:#fff;border:1.5px solid #ffffff66;border-radius:99px;padding:6px 14px;font-size:14px}
+main{max-width:760px;margin:auto;padding:16px}
+.box{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.hid{display:none!important}
+label{display:block;font-weight:700;font-size:14px;margin-top:12px}
+.in{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:5px;font-size:16px;background:#fff}
+.btn{width:100%;background:var(--ink);color:#fff;font-weight:800;border-radius:var(--r);padding:13px;margin-top:16px;font-size:16px}
+.note{font-size:13px;color:var(--mute);margin-top:8px}
+code{background:var(--bg);padding:2px 6px;border-radius:6px;word-break:break-all}
+.stats{display:flex;gap:10px;margin-bottom:12px}
+.st{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px;text-align:center}
+.st b{display:block;font-size:22px}.st span{font-size:12px;color:var(--mute)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.tools .in{margin:0}.tools .full{grid-column:1/-1}
+.new{background:var(--sun);color:var(--ink);font-weight:800;border-radius:12px;padding:11px}
+.item{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:10px}
+.item h3{font-size:17px}.item p{font-size:14px;color:var(--mute)}
+.badge{display:inline-block;font-size:12px;font-weight:800;border-radius:99px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+.b-ok{background:#dff5ea;color:var(--ok)}.b-no{background:#eceeed;color:var(--mute)}
+.acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.acts button{flex:1;min-width:90px;border-radius:10px;padding:9px;font-weight:700;font-size:14px;background:var(--bg);border:1.5px solid var(--line)}
+.acts .del{color:var(--bad);border-color:#e8b7b1}
+.sheet{position:fixed;inset:0;background:#0b222b99;display:none;align-items:flex-end;justify-content:center;z-index:10}
+.sheet.on{display:flex}
+.panel{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px 26px}
+.close{float:right;background:var(--bg);border-radius:50%;width:36px;height:36px;font-size:18px}
+.chk{display:flex;gap:10px;align-items:center;margin-top:14px;font-weight:700}.chk input{width:22px;height:22px}
+.row2{display:flex;gap:10px}.row2>*{flex:1}
+.pos{background:var(--bg);border:1.5px dashed var(--ink);border-radius:12px;padding:10px;width:100%;margin-top:10px;font-weight:700}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;display:none;z-index:20;font-size:14px;max-width:92vw;text-align:center}
+#toast.bad{background:var(--bad)}
+</style>
+</head>
+<body>
+<header><h1>Servi<span>Go</span><small>Admin</small></h1><button class="ghost hid" id="out">Sair</button></header>
+<main>
+  <section class="box" id="vLogin">
+    <h2>Entrar</h2>
+    <label>E-mail<input class="in" id="lMail" type="email" autocomplete="email"></label>
+    <label>Senha<input class="in" id="lPass" type="password" autocomplete="current-password"></label>
+    <button class="btn" id="lGo">Entrar</button>
+  </section>
+
+  <section class="box hid" id="vDenied">
+    <h2>Sem acesso</h2>
+    <p class="note">Esta conta não é de administrador. Para liberar, no Console do Firebase crie na coleção <b>admins</b> um documento com este ID:</p>
+    <p class="note"><code id="uidTxt"></code></p>
+  </section>
+
+  <section class="hid" id="vApp">
+    <div class="stats">
+      <div class="st"><b id="sTot">0</b><span>cadastrados</span></div>
+      <div class="st"><b id="sVer">0</b><span>verificados</span></div>
+      <div class="st"><b id="sShow">0</b><span>na tela</span></div>
+    </div>
+    <div class="tools">
+      <input class="in full" id="q" type="search" placeholder="Buscar por nome, profissão ou ID" aria-label="Buscar">
+      <select class="in" id="fCat" aria-label="Filtrar por profissão"></select>
+      <button class="new" id="bNew">+ Novo prestador</button>
+    </div>
+    <div id="list"></div>
+  </section>
+</main>
+
+<div class="sheet" id="shEdit"><div class="panel">
+  <button class="close" data-close aria-label="Fechar">✕</button>
+  <h2 id="eTitle">Prestador</h2>
+  <label>Nome<input class="in" id="eNome" maxlength="60"></label>
+  <label>Profissão<select class="in" id="eCat"></select></label>
+  <label>WhatsApp (com DDD)<input class="in" id="eTel" type="tel" inputmode="tel" placeholder="48 99999-0000"></label>
+  <label>Descrição<textarea class="in" id="eDesc" rows="3" maxlength="500"></textarea></label>
+  <div class="row2">
+    <label>Latitude<input class="in" id="eLat" type="number" step="any"></label>
+    <label>Longitude<input class="in" id="eLng" type="number" step="any"></label>
+  </div>
+  <button class="pos" id="ePos" type="button">📍 Usar minha localização atual</button>
+  <label class="chk"><input type="checkbox" id="eVer"> Selo de verificado</label>
+  <button class="btn" id="eSave">Salvar</button>
+</div></div>
+<div id="toast" role="status"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,updateDoc,deleteDoc,collection,getDocs,query,limit,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyBb-qVKqZiFGqVWjMZ6Ar1a7ZzpMuB0Iqg",
+  authDomain:"servigo-br.firebaseapp.com",
+  projectId:"servigo-br",
+  storageBucket:"servigo-br.firebasestorage.app",
+  messagingSenderId:"635869080622",
+  appId:"1:635869080622:web:2560cd873e129c01c203bf"
+});
+const auth=getAuth(app),db=getFirestore(app);
+const CATS=["Eletricista","Encanador","Pedreiro","Pintor","Babá","Cuidador(a) de idosos","Mecânico","Diarista","Jardineiro","Marceneiro","Serralheiro","Chaveiro","Vidraceiro","Gesseiro","Ar-condicionado","Eletrodomésticos","Informática","Montador de móveis","Pet","Costureira","Cozinheira","Fretes e mudanças","Beleza","Aulas particulares","Dedetização","Piscineiro","Outros"];
+let rows=[],q="",cat="",editId=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const show=(id,on)=>$(id).classList.toggle("hid",!on);
+function toast(m,bad){const t=$("#toast");t.textContent=m;t.className=bad?"bad":"";t.style.display="block";setTimeout(()=>t.style.display="none",3500)}
+const erro=e=>e.code==="permission-denied"?"Sem permissão. Publique o firestore.rules novo e confira o documento admins/SEU_UID":(e.code||e.message||"erro");
+const fdate=r=>r.criadoEm&&r.criadoEm.toDate?r.criadoEm.toDate().toLocaleDateString("pt-BR"):"-";
+
+$("#fCat").innerHTML='<option value="">Todas as profissões</option>'+CATS.map(c=>`<option>${esc(c)}</option>`).join("");
+$("#eCat").innerHTML=CATS.map(c=>`<option>${esc(c)}</option>`).join("");
+
+/* ---------- Dados ---------- */
+async function load(){
+  try{
+    const s=await getDocs(query(collection(db,"prestadores"),limit(500)));
+    rows=s.docs.map(d=>({id:d.id,...d.data()}));
+    rows.sort((a,b)=>(b.criadoEm?.seconds||0)-(a.criadoEm?.seconds||0));
+  }catch(e){toast("Não foi possível carregar: "+erro(e),1)}
+  render();
+}
+function render(){
+  const t=q.toLowerCase();
+  const L=rows.filter(r=>(!cat||r.categoria===cat)&&(!t||(r.nome+r.categoria+r.descricao+r.id).toLowerCase().includes(t)));
+  $("#sTot").textContent=rows.length;
+  $("#sVer").textContent=rows.filter(r=>r.verificado).length;
+  $("#sShow").textContent=L.length;
+  $("#list").innerHTML=L.length?L.map(r=>`<div class="item">
+    <h3>${esc(r.nome)}<span class="badge ${r.verificado?"b-ok":"b-no"}">${r.verificado?"✔ Verificado":"Não verificado"}</span></h3>
+    <p>${esc(r.categoria)} · cadastrado em ${fdate(r)}</p>
+    <p>${esc(r.descricao)}</p>
+    <p style="font-size:12px;margin-top:4px">ID: ${esc(r.id)}</p>
+    <div class="acts">
+      <button data-a="edit" data-id="${esc(r.id)}">Editar</button>
+      <button data-a="ver" data-id="${esc(r.id)}">${r.verificado?"Tirar selo":"Verificar"}</button>
+      <button class="del" data-a="del" data-id="${esc(r.id)}">Excluir</button>
+    </div></div>`).join(""):'<p class="note" style="text-align:center;margin-top:24px">Nenhum prestador encontrado.</p>';
+}
+
+/* ---------- Criar / editar ---------- */
+async function openEdit(id){
+  editId=id||null;
+  const r=id?rows.find(x=>x.id===id):null;
+  $("#eTitle").textContent=r?"Editar prestador":"Novo prestador";
+  $("#eNome").value=r?.nome||"";$("#eCat").value=r?.categoria||CATS[0];
+  $("#eDesc").value=r?.descricao||"";$("#eLat").value=r?.lat??"";$("#eLng").value=r?.lng??"";
+  $("#eVer").checked=!!r?.verificado;$("#eTel").value="";
+  $("#shEdit").classList.add("on");
+  if(r){try{const s=await getDoc(doc(db,"contatos",id));if(s.exists())$("#eTel").value=s.data().whatsapp.replace(/^55/,"")}catch(e){}}
+}
+$("#eSave").onclick=async()=>{
+  const nome=$("#eNome").value.trim(),desc=$("#eDesc").value.trim();
+  const lat=parseFloat($("#eLat").value),lng=parseFloat($("#eLng").value);
+  let t=$("#eTel").value.replace(/\D/g,"");if(t&&t.length<=11)t="55"+t;
+  if(nome.length<2||desc.length<10){toast("Nome (mín. 2) e descrição (mín. 10 letras) são obrigatórios",1);return}
+  if(!(lat>=-90&&lat<=90)||!(lng>=-180&&lng<=180)){toast("Informe latitude e longitude válidas",1);return}
+  if(t&&!/^\d{12,13}$/.test(t)){toast("WhatsApp inválido: use DDD + número",1);return}
+  if(!editId&&!t){toast("Informe o WhatsApp do novo prestador",1);return}
+  const data={nome,categoria:$("#eCat").value,descricao:desc,lat,lng,verificado:$("#eVer").checked,atualizadoEm:serverTimestamp()};
+  $("#eSave").disabled=true;
+  try{
+    let id=editId;
+    if(id)await updateDoc(doc(db,"prestadores",id),data);
+    else{const ref=doc(collection(db,"prestadores"));id=ref.id;await setDoc(ref,{...data,criadoEm:serverTimestamp()})}
+    if(t)await setDoc(doc(db,"contatos",id),{whatsapp:t});
+    $("#shEdit").classList.remove("on");await load();toast("Salvo!");
+  }catch(e){toast("Não foi possível salvar: "+erro(e),1)}
+  $("#eSave").disabled=false;
+};
+$("#ePos").onclick=()=>{
+  if(!navigator.geolocation){toast("Sem suporte a localização",1);return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    $("#eLat").value=Math.round(p.coords.latitude*100)/100;$("#eLng").value=Math.round(p.coords.longitude*100)/100;
+  },()=>toast("Permissão de localização negada",1),{timeout:12000});
+};
+
+/* ---------- Ações da lista ---------- */
+$("#list").onclick=async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const id=b.dataset.id,r=rows.find(x=>x.id===id);if(!r)return;
+  if(b.dataset.a==="edit")return openEdit(id);
+  try{
+    if(b.dataset.a==="ver"){
+      await updateDoc(doc(db,"prestadores",id),{verificado:!r.verificado,atualizadoEm:serverTimestamp()});
+      await load();toast(r.verificado?"Selo removido":"Prestador verificado");
+    }
+    if(b.dataset.a==="del"){
+      if(!confirm(`Excluir "${r.nome}"? O perfil e o WhatsApp serão apagados e isso não pode ser desfeito.\n\nA conta de login (e-mail) continua existindo e só pode ser removida no Console do Firebase, em Authentication.`))return;
+      await deleteDoc(doc(db,"prestadores",id));
+      try{await deleteDoc(doc(db,"contatos",id))}catch(x){}
+      await load();toast("Prestador excluído");
+    }
+  }catch(err){toast("Falhou: "+erro(err),1)}
+};
+$("#q").oninput=e=>{q=e.target.value;render()};
+$("#fCat").onchange=e=>{cat=e.target.value;render()};
+$("#bNew").onclick=()=>openEdit(null);
+document.addEventListener("click",e=>{if(e.target.matches("[data-close]")||e.target.classList.contains("sheet"))$("#shEdit").classList.remove("on")});
+
+/* ---------- Login e permissão ---------- */
+$("#lGo").onclick=async()=>{
+  try{await signInWithEmailAndPassword(auth,$("#lMail").value.trim(),$("#lPass").value);$("#lPass").value=""}
+  catch(e){toast("E-mail ou senha incorretos",1)}
+};
+$("#out").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,async u=>{
+  show("#vLogin",!u);show("#out",!!u);
+  if(!u){show("#vApp",false);show("#vDenied",false);rows=[];return}
+  let adm=false;
+  try{adm=(await getDoc(doc(db,"admins",u.uid))).exists()}catch(e){}
+  $("#uidTxt").textContent=u.uid;
+  show("#vDenied",!adm);show("#vApp",adm);
+  if(adm)load();
+});
+</script>
+</body>
+</html>
